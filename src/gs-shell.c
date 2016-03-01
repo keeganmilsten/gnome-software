@@ -882,6 +882,9 @@ gs_shell_show_sources (GsShell *shell)
 	GsShellPrivate *priv = gs_shell_get_instance_private (shell);
 	GtkWidget *dialog;
 
+	if (g_spawn_command_line_async ("software-properties-gtk", NULL))
+		return;
+
 	dialog = gs_sources_dialog_new (priv->main_window, priv->plugin_loader);
 	gs_shell_modal_dialog_present (shell, GTK_DIALOG (dialog));
 
