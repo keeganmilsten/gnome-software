@@ -104,6 +104,7 @@ struct _GsDetailsPage
 	GtkWidget		*label_details_size_installed_value;
 	GtkWidget		*label_details_size_download_title;
 	GtkWidget		*label_details_size_download_value;
+	GtkWidget		*label_details_updated_title;
 	GtkWidget		*label_details_updated_value;
 	GtkWidget		*label_details_version_value;
 	GtkWidget		*label_failed;
@@ -856,8 +857,8 @@ gs_details_page_refresh_all (GsDetailsPage *self)
 	updated = gs_app_get_install_date (self->app);
 	if (updated == GS_APP_INSTALL_DATE_UNKNOWN ||
 	    updated == GS_APP_INSTALL_DATE_UNSET) {
-		/* TRANSLATORS: this is where the updated date is not known */
-		gtk_label_set_label (GTK_LABEL (self->label_details_updated_value), C_("updated", "Never"));
+		gtk_widget_set_visible (self->label_details_updated_title, FALSE);
+		gtk_widget_set_visible (self->label_details_updated_value, FALSE);
 	} else {
 		g_autoptr(GDateTime) dt = NULL;
 		g_autofree gchar *updated_str = NULL;
@@ -876,6 +877,8 @@ gs_details_page_refresh_all (GsDetailsPage *self)
 			gtk_label_set_markup (GTK_LABEL (self->label_details_updated_value), url->str);
 			g_string_free (url, TRUE);
 		}
+		gtk_widget_set_visible (self->label_details_updated_title, TRUE);
+		gtk_widget_set_visible (self->label_details_updated_value, TRUE);
 	}
 
 	/* set the category */
@@ -2228,6 +2231,7 @@ gs_details_page_class_init (GsDetailsPageClass *klass)
 	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_details_size_download_value);
 	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_details_size_installed_title);
 	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_details_size_installed_value);
+	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_details_updated_title);
 	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_details_updated_value);
 	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_details_version_value);
 	gtk_widget_class_bind_template_child (widget_class, GsDetailsPage, label_failed);
