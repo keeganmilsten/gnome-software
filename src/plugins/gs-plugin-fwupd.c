@@ -931,7 +931,7 @@ gs_plugin_fwupd_install (GsPlugin *plugin,
 {
 	const gchar *install_method;
 	g_autofree gchar *filename = NULL;
-	gboolean offline = TRUE;
+	gboolean offline = FALSE;
 
 	/* only process this app if was created by this plugin */
 	if (g_strcmp0 (gs_app_get_management_plugin (app), "fwupd") != 0)
