@@ -22,6 +22,7 @@
 #ifndef __GS_UTILS_H
 #define __GS_UTILS_H
 
+#include <gio/gdesktopappinfo.h>
 #include <gtk/gtk.h>
 
 #include "gs-app.h"
@@ -69,6 +70,8 @@ gboolean	 gs_utils_is_current_desktop	(const gchar	*name);
 gboolean	 gs_utils_is_current_desktop	(const gchar	*name);
 void		 gs_utils_widget_set_custom_css	(GtkWidget	*widget,
 						 const gchar	*css);
+
+GDesktopAppInfo *gs_utils_get_desktop_app_info	(const gchar	*id);
 
 G_END_DECLS
 
