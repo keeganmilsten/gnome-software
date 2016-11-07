@@ -36,6 +36,10 @@ if HAVE_EXTERNAL_APPSTREAM
 SUBDIRS += external-appstream
 endif
 
+if HAVE_APT
+SUBDIRS += apt
+endif
+
 if HAVE_SNAP
 SUBDIRS += snap
 endif

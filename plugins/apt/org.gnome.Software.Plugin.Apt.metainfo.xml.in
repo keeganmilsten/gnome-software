@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Canonical Ltd -->
+<component type="addon">
+  <id>org.gnome.Software.Plugin.Apt</id>
+  <extends>org.gnome.Software.desktop</extends>
+  <name>APT Support</name>
+  <summary>APT package support</summary>
+  <url type="homepage">https://www.ubuntu.com/desktop</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <update_contact>ubuntu-desktop_at_lists.ubuntu.com</update_contact>
+</component>

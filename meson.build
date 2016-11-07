@@ -1,4 +1,4 @@
-project('gnome-software', 'c',
+project('gnome-software', ['c', 'cpp'],
   version : '3.24.2',
   default_options : ['warning_level=1'],
   meson_version : '>=0.37.0'
@@ -63,29 +63,33 @@ test_args = [
   '-Wunused-but-set-variable',
   '-Wwrite-strings'
 ]
-cc = meson.get_compiler('c')
-foreach arg: test_args
-  if cc.has_argument(arg)
-    add_project_arguments(arg, language : 'c')
-  endif
+foreach lang : ['c', 'cpp']
+  cc = meson.get_compiler(lang)
+  foreach arg: test_args
+    if cc.has_argument(arg)
+      add_project_arguments(arg, language : lang)
+    endif
+  endforeach
+
+  # enable full RELRO where possible
+  # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
+  global_link_args = []
+  test_link_args = [
+    '-Wl,-z,relro',
+    '-Wl,-z,now',
+  ]
+  foreach arg: test_link_args
+    if cc.has_argument(arg)
+      global_link_args += arg
+    endif
+  endforeach
+  add_global_link_arguments(
+    global_link_args,
+    language: lang
+  )
 endforeach
 
-# enable full RELRO where possible
-# FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
-global_link_args = []
-test_link_args = [
-  '-Wl,-z,relro',
-  '-Wl,-z,now',
-]
-foreach arg: test_link_args
-  if cc.has_argument(arg)
-    global_link_args += arg
-  endif
-endforeach
-add_global_link_arguments(
-  global_link_args,
-  language: 'c'
-)
+add_project_arguments('-Wno-aggregate-return', language: 'cpp')
 
 appstream_glib = dependency('appstream-glib', version : '>= 0.6.5')
 gdk_pixbuf = dependency('gdk-pixbuf-2.0', version : '>= 2.31.5')
@@ -121,6 +125,12 @@ if get_option('enable-packagekit')
                         language : 'c')
 endif
 
+if get_option('enable-apt')
+  add_project_arguments('-DI_KNOW_THE_GNOME_SOFTWARE_API_IS_SUBJECT_TO_CHANGE',
+                        language : 'cpp')
+  cpp = meson.get_compiler('cpp')
+  libapt = cpp.find_library('apt-pkg', required : true)
+endif
 if get_option('enable-firmware')
   fwupd = dependency('fwupd', version : '>= 0.7.0')
 endif

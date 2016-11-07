@@ -34,6 +34,18 @@ shared_module('gs_plugin_dpkg',
   dependencies : plugin_libs
 )
 
+shared_module('gs_plugin_apt',
+  sources : 'gs-plugin-apt.cc',
+  include_directories : [
+    include_directories('..'),
+    include_directories('../..'),
+  ],
+  install : true,
+  install_dir: plugin_dir,
+  cpp_args : cargs,
+  dependencies : [plugin_libs, libapt ]
+)
+
 shared_module('gs_plugin_generic-updates',
   sources : 'gs-plugin-generic-updates.c',
   include_directories : [
