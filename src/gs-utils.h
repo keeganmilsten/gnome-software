@@ -73,6 +73,9 @@ void		 gs_utils_widget_set_custom_css	(GtkWidget	*widget,
 
 GDesktopAppInfo *gs_utils_get_desktop_app_info	(const gchar	*id);
 
+gchar		*gs_utils_get_url_scheme	(const gchar	*url);
+gchar		*gs_utils_get_url_path		(const gchar	*url);
+
 G_END_DECLS
 
 #endif /* __GS_UTILS_H */
