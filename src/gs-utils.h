@@ -70,6 +70,9 @@ gboolean	 gs_utils_is_current_desktop	(const gchar	*name);
 
 GDesktopAppInfo *gs_utils_get_desktop_app_info	(const gchar	*id);
 
+gchar		*gs_utils_get_url_scheme	(const gchar	*url);
+gchar		*gs_utils_get_url_path		(const gchar	*url);
+
 G_END_DECLS
 
 #endif /* __GS_UTILS_H */
