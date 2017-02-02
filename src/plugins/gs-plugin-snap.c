@@ -175,6 +175,40 @@ snap_to_app (GsPlugin *plugin, JsonObject *snap)
 	return app;
 }
 
+gboolean
+gs_plugin_url_to_app (GsPlugin *plugin,
+		      GsAppList *list,
+		      const gchar *url,
+		      GCancellable *cancellable,
+		      GError **error)
+{
+	g_autofree gchar *scheme = NULL;
+	g_autofree gchar *macaroon = NULL;
+	g_auto(GStrv) discharges = NULL;
+	g_autoptr(JsonArray) snaps = NULL;
+	JsonObject *snap;
+	g_autofree gchar *path = NULL;
+	g_autoptr(GsApp) app = NULL;
+
+	/* not us */
+	scheme = gs_utils_get_url_scheme (url);
+	if (g_strcmp0 (scheme, "snap") != 0)
+		return TRUE;
+
+	get_macaroon (plugin, &macaroon, &discharges);
+
+	/* create app */
+	path = gs_utils_get_url_path (url);
+	snaps = find_snaps (plugin, NULL, TRUE, path, cancellable, NULL);
+	if (snaps == NULL || json_array_get_length (snaps) < 1)
+		return TRUE;
+
+	snap = json_array_get_object_element (snaps, 0);
+	gs_app_list_add (list, snap_to_app (plugin, snap));
+
+	return TRUE;
+}
+
 void
 gs_plugin_destroy (GsPlugin *plugin)
 {

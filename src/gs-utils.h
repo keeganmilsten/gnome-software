@@ -70,6 +70,8 @@ gint		 gs_utils_get_wilson_rating	(guint64	 star1,
 						 guint64	 star3,
 						 guint64	 star4,
 						 guint64	 star5);
+gchar		*gs_utils_get_url_scheme	(const gchar	*url);
+gchar		*gs_utils_get_url_path		(const gchar	*url);
 
 G_END_DECLS
 

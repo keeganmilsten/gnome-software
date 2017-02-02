@@ -135,6 +135,11 @@ typedef gboolean	 (*GsPluginFileToAppFunc)	(GsPlugin	*plugin,
 							 GFile		*file,
 							 GCancellable	*cancellable,
 							 GError		**error);
+typedef gboolean	 (*GsPluginUrlToAppFunc)	(GsPlugin	*plugin,
+							 GsAppList	*list,
+							 const gchar	*url,
+							 GCancellable	*cancellable,
+							 GError		**error);
 typedef gboolean	 (*GsPluginUpdateFunc)		(GsPlugin	*plugin,
 							 GsAppList	*apps,
 							 GCancellable	*cancellable,
@@ -4533,6 +4538,191 @@ gs_plugin_loader_file_to_app_finish (GsPluginLoader *plugin_loader,
 
 /******************************************************************************/
 
+static void
+gs_plugin_loader_url_to_app_thread_cb (GTask *task,
+				       gpointer object,
+				       gpointer task_data,
+				       GCancellable *cancellable)
+{
+	GsPluginLoader *plugin_loader = GS_PLUGIN_LOADER (object);
+	GsPluginLoaderPrivate *priv = gs_plugin_loader_get_instance_private (plugin_loader);
+	const gchar *function_name = "gs_plugin_url_to_app";
+	gboolean ret = TRUE;
+	GError *error = NULL;
+	guint i;
+	guint j;
+	GsPluginLoaderAsyncState *state = (GsPluginLoaderAsyncState *) task_data;
+	GsPlugin *plugin;
+	GsPluginUrlToAppFunc plugin_func = NULL;
+
+	/* run each plugin */
+	for (i = 0; i < priv->plugins->len; i++) {
+		g_autoptr(AsProfileTask) ptask = NULL;
+		g_autoptr(GError) error_local = NULL;
+		plugin = g_ptr_array_index (priv->plugins, i);
+		if (!gs_plugin_get_enabled (plugin))
+			continue;
+		if (g_task_return_error_if_cancelled (task))
+			return;
+		g_module_symbol (gs_plugin_get_module (plugin),
+				 function_name,
+				 (gpointer *) &plugin_func);
+		if (plugin_func == NULL)
+			continue;
+		ptask = as_profile_start (priv->profile,
+					  "GsPlugin::%s(%s)",
+					  gs_plugin_get_name (plugin),
+					  function_name);
+		g_assert (ptask != NULL);
+		gs_plugin_loader_action_start (plugin_loader, plugin, FALSE);
+		ret = plugin_func (plugin, state->list, state->value,
+				   cancellable, &error_local);
+		gs_plugin_loader_action_stop (plugin_loader, plugin);
+		if (!ret) {
+			/* badly behaved plugin */
+			if (error_local == NULL) {
+				g_critical ("%s did not set error for %s",
+					    gs_plugin_get_name (plugin),
+					    function_name);
+				continue;
+			}
+			g_warning ("failed to call %s on %s: %s",
+				   function_name,
+				   gs_plugin_get_name (plugin),
+				   error_local->message);
+			continue;
+		}
+		gs_plugin_status_update (plugin, NULL, GS_PLUGIN_STATUS_FINISHED);
+	}
+
+	/* set the local file on any of the returned results */
+	for (j = 0; j < gs_app_list_length (state->list); j++) {
+		GsApp *app = gs_app_list_index (state->list, j);
+		if (gs_app_get_local_file (app) == NULL)
+			gs_app_set_local_file (app, state->file);
+	}
+
+	/* run refine() on each one */
+	ret = gs_plugin_loader_run_refine (plugin_loader,
+					   function_name,
+					   state->list,
+					   state->flags,
+					   cancellable,
+					   &error);
+	if (!ret) {
+		g_task_return_error (task, error);
+		return;
+	}
+
+	/* filter package list */
+	gs_app_list_filter (state->list, gs_plugin_loader_app_set_prio, plugin_loader);
+	gs_app_list_filter_duplicates (state->list, GS_APP_LIST_FILTER_FLAG_PRIORITY);
+
+	/* check the apps have an icon set */
+	for (j = 0; j < gs_app_list_length (state->list); j++) {
+		GsApp *app = gs_app_list_index (state->list, j);
+		if (_gs_app_get_icon_by_kind (app, AS_ICON_KIND_STOCK) == NULL &&
+		    _gs_app_get_icon_by_kind (app, AS_ICON_KIND_LOCAL) == NULL &&
+		    _gs_app_get_icon_by_kind (app, AS_ICON_KIND_CACHED) == NULL) {
+			g_autoptr(AsIcon) ic = as_icon_new ();
+			as_icon_set_kind (ic, AS_ICON_KIND_STOCK);
+			if (gs_app_get_kind (app) == AS_APP_KIND_SOURCE)
+				as_icon_set_name (ic, "x-package-repository");
+			else
+				as_icon_set_name (ic, "application-x-executable");
+			gs_app_add_icon (app, ic);
+		}
+	}
+
+	/* run refine() on each one again to pick up any icons */
+	ret = gs_plugin_loader_run_refine (plugin_loader,
+					   function_name,
+					   state->list,
+					   GS_PLUGIN_REFINE_FLAGS_REQUIRE_ICON,
+					   cancellable,
+					   &error);
+	if (!ret) {
+		g_task_return_error (task, error);
+		return;
+	}
+
+	/* success */
+	if (gs_app_list_length (state->list) != 1) {
+		g_task_return_new_error (task,
+					 GS_PLUGIN_ERROR,
+					 GS_PLUGIN_ERROR_NOT_SUPPORTED,
+					 "no application was created for %s",
+					 g_file_get_path (state->file));
+		return;
+	}
+	g_task_return_pointer (task, g_object_ref (gs_app_list_index (state->list, 0)), (GDestroyNotify) g_object_unref);
+}
+
+/**
+ * gs_plugin_loader_url_to_app_async:
+ *
+ * This method calls all plugins that implement the gs_plugin_add_url_to_app()
+ * function. The plugins can either return #GsApp objects of kind
+ * %AS_APP_KIND_DESKTOP for bonafide applications, or #GsApp's of kind
+ * %AS_APP_KIND_GENERIC for packages that may or may not be applications.
+ *
+ * Once the list of updates is refined, some of the #GsApp's of kind
+ * %AS_APP_KIND_GENERIC will have been promoted to a kind of %AS_APP_KIND_DESKTOP,
+ * or if they are core applications.
+ *
+ * Files that are supported will have the GFile used to create them available
+ * from the gs_app_get_local_file() method.
+ **/
+void
+gs_plugin_loader_url_to_app_async (GsPluginLoader *plugin_loader,
+				   const gchar *url,
+				   GsPluginRefineFlags flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer user_data)
+{
+	GsPluginLoaderAsyncState *state;
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (GS_IS_PLUGIN_LOADER (plugin_loader));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+
+	/* save state */
+	state = g_slice_new0 (GsPluginLoaderAsyncState);
+	state->flags = flags;
+	state->list = gs_app_list_new ();
+	state->value = g_strdup (url);
+
+	/* run in a thread */
+	task = g_task_new (plugin_loader, cancellable, callback, user_data);
+	g_task_set_task_data (task, state, (GDestroyNotify) gs_plugin_loader_free_async_state);
+	g_task_set_return_on_cancel (task, TRUE);
+	g_task_run_in_thread (task, gs_plugin_loader_url_to_app_thread_cb);
+}
+
+/**
+ * gs_plugin_loader_url_to_app_finish:
+ *
+ * Return value: (element-type GsApp) (transfer full): An application, or %NULL
+ **/
+GsApp *
+gs_plugin_loader_url_to_app_finish (GsPluginLoader *plugin_loader,
+				    GAsyncResult *res,
+				    GError **error)
+{
+	g_return_val_if_fail (GS_IS_PLUGIN_LOADER (plugin_loader), NULL);
+	g_return_val_if_fail (G_IS_TASK (res), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, plugin_loader), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+/******************************************************************************/
+
+/**
+ * gs_plugin_loader_update_thread_cb:
+ **/
 static void
 gs_plugin_loader_update_thread_cb (GTask *task,
 				   gpointer object,
