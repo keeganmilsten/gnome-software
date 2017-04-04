@@ -1498,21 +1498,46 @@ set_app (GsDetailsPage *self, GsApp *app)
 	gs_details_page_app_refine2 (self);
 }
 
+typedef struct {
+	GsDetailsPage *page;
+	gchar *url;
+} GsDetailsFileHelper;
+
+static void
+gs_details_page_file_helper_free (GsDetailsFileHelper *helper)
+{
+	g_object_unref (helper->page);
+	g_free (helper->url);
+	g_free (helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GsDetailsFileHelper, gs_details_page_file_helper_free);
+
 static void
 gs_details_page_file_to_app_cb (GObject *source,
                                 GAsyncResult *res,
                                 gpointer user_data)
 {
 	GsPluginLoader *plugin_loader = GS_PLUGIN_LOADER (source);
-	GsDetailsPage *self = GS_DETAILS_PAGE (user_data);
+	g_autoptr(GsDetailsFileHelper) helper = user_data;
+	GsDetailsPage *self = helper->page;
 	g_autoptr(GsApp) app = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autofree gchar *msg = NULL;
 
 	app = gs_plugin_loader_file_to_app_finish (plugin_loader,
 						   res,
 						   &error);
-	if (app == NULL)
+	if (app == NULL) {
+		/* TRANSLATORS: This message is shown when opening
+		 * gnome-software with a path to an unhandled app, e.g.
+		 * /no/such/file */
+		msg = g_strdup_printf (_("Don't know how to handle ‘%s’"), helper->url);
 		g_warning ("failed to convert file to GsApp: %s", error->message);
+		gs_shell_show_event_app_notify (self->shell,
+						msg,
+						GS_SHELL_EVENT_BUTTON_NONE);
+	}
 	set_app (self, app);
 }
 
@@ -1522,21 +1547,31 @@ gs_details_page_url_to_app_cb (GObject *source,
                                gpointer user_data)
 {
 	GsPluginLoader *plugin_loader = GS_PLUGIN_LOADER (source);
-	GsDetailsPage *self = GS_DETAILS_PAGE (user_data);
+	g_autoptr(GsDetailsFileHelper) helper = user_data;
+	GsDetailsPage *self = helper->page;
 	g_autoptr(GsApp) app = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autofree gchar *msg = NULL;
 
 	app = gs_plugin_loader_url_to_app_finish (plugin_loader,
 						  res,
 						  &error);
-	if (app == NULL)
+	if (app == NULL) {
+		msg = g_strdup_printf (_("Don't know how to handle ‘%s’"), helper->url);
 		g_warning ("failed to convert URL to GsApp: %s", error->message);
+		gs_shell_show_event_app_notify (self->shell,
+						msg,
+						GS_SHELL_EVENT_BUTTON_NONE);
+	}
 	set_app (self, app);
 }
 
 void
 gs_details_page_set_local_file (GsDetailsPage *self, GFile *file)
 {
+	GsDetailsFileHelper *helper = g_new0 (GsDetailsFileHelper, 1);
+	helper->page = g_object_ref (self);
+	helper->url = g_file_get_uri (file);
 	gs_details_page_set_state (self, GS_DETAILS_PAGE_STATE_LOADING);
 	gs_plugin_loader_file_to_app_async (self->plugin_loader,
 					    file,
@@ -1556,12 +1591,15 @@ gs_details_page_set_local_file (GsDetailsPage *self, GFile *file)
 					    GS_PLUGIN_FAILURE_FLAGS_USE_EVENTS,
 					    self->cancellable,
 					    gs_details_page_file_to_app_cb,
-					    self);
+					    helper);
 }
 
 void
 gs_details_page_set_url (GsDetailsPage *self, const gchar *url)
 {
+	GsDetailsFileHelper *helper = g_new0 (GsDetailsFileHelper, 1);
+	helper->page = g_object_ref (self);
+	helper->url = g_strdup (url);
 	gs_details_page_set_state (self, GS_DETAILS_PAGE_STATE_LOADING);
 	gs_plugin_loader_url_to_app_async (self->plugin_loader,
 					   url,
@@ -1581,7 +1619,7 @@ gs_details_page_set_url (GsDetailsPage *self, const gchar *url)
 					   GS_PLUGIN_FAILURE_FLAGS_USE_EVENTS,
 					   self->cancellable,
 					   gs_details_page_url_to_app_cb,
-					   self);
+					   helper);
 }
 
 static void
