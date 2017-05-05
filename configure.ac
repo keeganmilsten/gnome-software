@@ -291,7 +291,7 @@ AS_IF([test "x$enable_flatpak" != "xno"], [
     AS_IF([test "x$enable_tests" = "xyes"], [
            # the flatpak tests want to call flatpak build-export --timestamp,
            # which exists as of 0.9.1
-           FLATPAK_REQUIRED=0.9.1
+           #FLATPAK_REQUIRED=0.9.1
     ])
     PKG_CHECK_MODULES(FLATPAK,
                       [flatpak >= $FLATPAK_REQUIRED],
