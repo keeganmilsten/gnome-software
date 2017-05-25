@@ -265,6 +265,7 @@ typedef enum {
  * @GS_PLUGIN_ACTION_GET_RECENT:		Get the apps recently released
  * @GS_PLUGIN_ACTION_INITIALIZE:		Initialize the plugin
  * @GS_PLUGIN_ACTION_DESTROY:			Destroy the plugin
+ * @GS_PLUGIN_ACTION_PURCHASE:			Purchase an app
  *
  * The plugin action.
  **/
@@ -311,6 +312,7 @@ typedef enum {
 	GS_PLUGIN_ACTION_GET_UPDATES_HISTORICAL,
 	GS_PLUGIN_ACTION_INITIALIZE,
 	GS_PLUGIN_ACTION_DESTROY,
+	GS_PLUGIN_ACTION_PURCHASE,
 	/*< private >*/
 	GS_PLUGIN_ACTION_LAST
 } GsPluginAction;
