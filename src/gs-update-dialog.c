@@ -307,7 +307,7 @@ gs_update_dialog_show_update_details (GsUpdateDialog *dialog, GsApp *app)
 				      NULL);
 			gtk_widget_set_halign (label, GTK_ALIGN_START);
 			gtk_widget_set_valign (label, GTK_ALIGN_CENTER);
-			gtk_box_pack_start (GTK_BOX (row), label, TRUE, TRUE, 0);
+			gtk_box_pack_start (GTK_BOX (row), label);
 			label = gtk_label_new (gs_app_get_update_version (app_related));
 			g_object_set (label,
 				      "margin-start", 0,
@@ -319,8 +319,8 @@ gs_update_dialog_show_update_details (GsUpdateDialog *dialog, GsApp *app)
 				      NULL);
 			gtk_widget_set_halign (label, GTK_ALIGN_END);
 			gtk_widget_set_valign (label, GTK_ALIGN_CENTER);
-			gtk_box_pack_start (GTK_BOX (row), label, FALSE, FALSE, 0);
-			gtk_widget_show_all (row);
+			gtk_box_pack_start (GTK_BOX (row), label);
+			gtk_widget_show (row);
 			gtk_list_box_insert (GTK_LIST_BOX (dialog->list_box), row, -1);
 		}
 		gtk_stack_set_transition_type (GTK_STACK (dialog->stack), GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT);

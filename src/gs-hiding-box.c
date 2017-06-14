@@ -128,7 +128,6 @@ gs_hiding_box_remove (GtkContainer *container, GtkWidget *widget)
 
 static void
 gs_hiding_box_forall (GtkContainer *container,
-		      gboolean      include_internals,
 		      GtkCallback   callback,
 		      gpointer      callback_data)
 {
@@ -164,7 +163,6 @@ gs_hiding_box_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
 	gint children_size;
 	GtkAllocation clip, child_clip;
 
-	gtk_widget_set_allocation (widget, allocation);
 
 	for (child = box->children; child != NULL; child = child->next) {
 		if (gtk_widget_get_visible (child->data))
@@ -187,10 +185,7 @@ gs_hiding_box_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
 		if (!gtk_widget_get_visible (child_widget))
 			continue;
 
-		gtk_widget_get_preferred_width_for_height (child_widget,
-							   allocation->height,
-							   &sizes[i].minimum_size,
-							   &sizes[i].natural_size);
+		gtk_widget_measure (child_widget, GTK_ORIENTATION_HORIZONTAL,allocation->height,&sizes[i].minimum_size,&sizes[i].natural_size,NULL,NULL);
 
 		/* Assert the api is working properly */
 		if (sizes[i].minimum_size < 0)
@@ -287,63 +282,57 @@ gs_hiding_box_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
 }
 
 static void
-gs_hiding_box_get_preferred_width (GtkWidget *widget, gint *min, gint *nat)
+gs_hiding_box_measure (GtkWidget      *widget,
+                       GtkOrientation  orientation,
+                       int             for_size,
+                       int            *minimum,
+                       int            *natural,
+                       int            *minimum_baseline,
+                       int            *natural_baseline)
 {
 	GsHidingBox *box = GS_HIDING_BOX (widget);
-	gint cm, cn;
-	gint m, n;
 	GList *child;
-	gint nvis_children;
-	gboolean have_min = FALSE;
+	int m, n;
+	int cm, cn;
 
-	m = n = nvis_children = 0;
-	for (child = box->children; child != NULL; child = child->next) {
-		if (!gtk_widget_is_visible (child->data))
-			continue;
-
-		++nvis_children;
-		gtk_widget_get_preferred_width (child->data, &cm, &cn);
-		/* Minimum is a minimum of the first visible child */
-		if (!have_min) {
-			m = cm;
-			have_min = TRUE;
-		}
-		/* Natural is a sum of all visible children */
-		n += cn;
-	}
-
-	/* Natural must also include the spacing */
-	if (box->spacing && nvis_children > 1)
-		n += box->spacing * (nvis_children - 1);
-
-	if (min)
-		*min = m;
-	if (nat)
-		*nat = n;
-}
-
-static void
-gs_hiding_box_get_preferred_height (GtkWidget *widget, gint *min, gint *nat)
-{
-	gint m, n;
-	gint cm, cn;
-	GList *child;
-
-	GsHidingBox *box = GS_HIDING_BOX (widget);
 	m = n = 0;
-	for (child = box->children; child != NULL; child = child->next) {
-		if (!gtk_widget_is_visible (child->data))
-			continue;
 
-		gtk_widget_get_preferred_height (child->data, &cm, &cn);
-		m = MAX (m, cm);
-		n = MAX (n, cn);
+	if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+		gint nvis_children;
+		gboolean have_min = FALSE;
+
+		m = n = nvis_children = 0;
+		for (child = box->children; child != NULL; child = child->next) {
+			if (!gtk_widget_is_visible (child->data))
+				continue;
+
+			++nvis_children;
+			gtk_widget_measure (child->data, GTK_ORIENTATION_HORIZONTAL, -1, &cm, &cn,NULL,NULL);
+			/* Minimum is a minimum of the first visible child */
+			if (!have_min) {
+				m = cm;
+				have_min = TRUE;
+			}
+			/* Natural is a sum of all visible children */
+			n += cn;
+		}
+
+		/* Natural must also include the spacing */
+		if (box->spacing && nvis_children > 1)
+			n += box->spacing * (nvis_children - 1);
+	} else { /* VERTICAL */
+		for (child = box->children; child != NULL; child = child->next) {
+			if (!gtk_widget_is_visible (child->data))
+				continue;
+
+			gtk_widget_measure (child->data, GTK_ORIENTATION_VERTICAL, -1, &cm, &cn,NULL,NULL);
+			m = MAX (m, cm);
+			n = MAX (n, cn);
+		}
 	}
 
-	if (min)
-		*min = m;
-	if (nat)
-		*nat = n;
+	*minimum = m;
+	*natural = n;
 }
 
 static void
@@ -365,9 +354,8 @@ gs_hiding_box_class_init (GsHidingBoxClass *class)
 	object_class->set_property = gs_hiding_box_set_property;
 	object_class->get_property = gs_hiding_box_get_property;
 
+	widget_class->measure = gs_hiding_box_measure;
 	widget_class->size_allocate = gs_hiding_box_size_allocate;
-	widget_class->get_preferred_width = gs_hiding_box_get_preferred_width;
-	widget_class->get_preferred_height = gs_hiding_box_get_preferred_height;
 
 	container_class->add = gs_hiding_box_add;
 	container_class->remove = gs_hiding_box_remove;
