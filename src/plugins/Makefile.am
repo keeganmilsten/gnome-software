@@ -44,6 +44,11 @@ plugin_LTLIBRARIES =					\
 	libgs_plugin_epiphany.la			\
 	libgs_plugin_icons.la
 
+if HAVE_APT
+plugin_LTLIBRARIES +=					\
+	libgs_plugin_apt.la
+endif
+
 if HAVE_PACKAGEKIT
 plugin_LTLIBRARIES +=					\
 	libgs_plugin_systemd-updates.la			\
@@ -137,6 +142,27 @@ libgs_plugin_xdg_app_reviews_la_SOURCES = gs-plugin-xdg-app-reviews.c
 libgs_plugin_xdg_app_reviews_la_LIBADD = $(GS_PLUGIN_LIBS) $(JSON_GLIB_LIBS)
 libgs_plugin_xdg_app_reviews_la_LDFLAGS = -module -avoid-version
 libgs_plugin_xdg_app_reviews_la_CFLAGS = $(GS_PLUGIN_CFLAGS) $(WARN_CFLAGS)
+endif
+
+if HAVE_APT
+ubuntu-unity-launcher-proxy.c ubuntu-unity-launcher-proxy.h: com.canonical.Unity.Launcher.xml Makefile
+	$(AM_V_GEN) gdbus-codegen --interface-prefix com.canonical.Unity.Launcher \
+	                 --generate-c-code ubuntu-unity-launcher-proxy \
+	                 --c-namespace UbuntuUnity \
+	                 --annotate 'com.canonical.Unity.Launcher' \
+	                            org.gtk.GDBus.C.Name \
+	                            Launcher \
+	                 $<
+
+CLEANFILES = ubuntu-unity-launcher-proxy.h ubuntu-unity-launcher-proxy.c
+
+libgs_plugin_apt_la_SOURCES = \
+	ubuntu-unity-launcher-proxy.c \
+	ubuntu-unity-launcher-proxy.h \
+	gs-plugin-apt.cc
+libgs_plugin_apt_la_LIBADD = $(GS_PLUGIN_LIBS) -lapt-pkg
+libgs_plugin_apt_la_LDFLAGS = -module -avoid-version
+libgs_plugin_apt_la_CFLAGS = $(GS_PLUGIN_CFLAGS) $(WARN_CFLAGS)
 endif
 
 libgs_plugin_moduleset_la_SOURCES =			\
@@ -262,6 +288,6 @@ gs_self_test_CFLAGS = $(WARN_CFLAGS)
 
 TESTS = gs-self-test
 
-EXTRA_DIST = moduleset-test.xml gs-ubuntuone-dialog.h gs-ubuntuone-dialog.ui ubuntu-one.png
+EXTRA_DIST = moduleset-test.xml gs-ubuntuone-dialog.h gs-ubuntuone-dialog.ui ubuntu-one.png com.canonical.Unity.Launcher.xml
 
 -include $(top_srcdir)/git.mk
