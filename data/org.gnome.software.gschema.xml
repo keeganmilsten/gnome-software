@@ -2,6 +2,10 @@
       download-updates=false
  [org.gnome.software]
       show-nonfree-software=true
+[org.gnome.software]
+      allow-updates=false
+[org.gnome.software]
+      show-ratings=true
 
 <schemalist>
   <schema id="org.gnome.software" path="/org/gnome/software/" gettext-domain="gnome-software">
