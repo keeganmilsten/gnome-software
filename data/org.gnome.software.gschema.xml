@@ -6,6 +6,8 @@
       <description>This is a list of compatible projects we should show such as GNOME, KDE and XFCE.</description>
  [org.gnome.software]
       download-updates=false
+ [org.gnome.software]
+      show-nonfree-software=true
     </key>
     <key name="allow-updates" type="b">
       <default>false</default>
