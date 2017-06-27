@@ -6,12 +6,12 @@
       <description>This is a list of compatible projects we should show such as GNOME, KDE and XFCE.</description>
     </key>
     <key name="allow-updates" type="b">
-      <default>true</default>
+      <default>false</default>
       <summary>Whether to manage updates in GNOME Software</summary>
       <description>If disabled, GNOME Software will hide the updates panel and not perform any automatic updates actions.</description>
     </key>
     <key name="download-updates" type="b">
-      <default>true</default>
+      <default>false</default>
       <summary>Whether to automatically download updates</summary>
       <description>If enabled, GNOME Software automatically downloads updates in the background and prompts the user to install them when ready.</description>
     </key>
@@ -119,7 +119,7 @@
       <summary>Show the prompt to install nonfree software sources</summary>
     </key>
     <key name="show-nonfree-software" type="b">
-      <default>false</default>
+      <default>true</default>
       <summary>Show non-free software in search results</summary>
     </key>
     <key name="installed-page-show-size" type="b">
