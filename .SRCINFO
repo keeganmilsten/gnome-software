@@ -22,7 +22,11 @@ pkgbase = gnome-software
 	depends = archlinux-appstream-data
 	options = !libtool
 	options = !emptydirs
-	source = http://download.gnome.org/sources/gnome-software/3.14/gnome-software-3.14.3.tar.xz
+	
+	
+	source = NEED URL TO DOWNLOAD LINK
+	
+	
 	sha256sums = 69c4aaf4f518f0f780469cf60e5e20bb766e3eb6ce068c78dc06a260377f79ab
 
 pkgname = gnome-software
