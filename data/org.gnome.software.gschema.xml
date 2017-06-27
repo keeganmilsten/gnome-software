@@ -1,13 +1,14 @@
+[org.gnome.software]
+      download-updates=false
+ [org.gnome.software]
+      show-nonfree-software=true
+
 <schemalist>
   <schema id="org.gnome.software" path="/org/gnome/software/" gettext-domain="gnome-software">
     <key name="compatible-projects" type="as">
       <default>['GNOME', 'KDE', 'XFCE']</default>
       <summary>A list of compatible projects</summary>
       <description>This is a list of compatible projects we should show such as GNOME, KDE and XFCE.</description>
- [org.gnome.software]
-      download-updates=false
- [org.gnome.software]
-      show-nonfree-software=true
     </key>
     <key name="allow-updates" type="b">
       <default>false</default>
