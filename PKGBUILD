@@ -10,7 +10,7 @@ makedepends=(intltool docbook-xsl)
 options=('!libtool' '!emptydirs')
 install=gnome-software.install
 groups=('gnome-extra')
-source=(http://download.gnome.org/sources/$pkgname/${pkgver:0:4}/$pkgname-$pkgver.tar.xz)
+source=(https://hubic.com/home/pub/download/$pkgname/${pkgver:0:4}/$pkgname-$pkgver.tar.xz)
 sha256sums=('69c4aaf4f518f0f780469cf60e5e20bb766e3eb6ce068c78dc06a260377f79ab')
 
 build() {
