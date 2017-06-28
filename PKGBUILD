@@ -14,14 +14,14 @@ source=(http://download.gnome.org/sources/$pkgname/${pkgver:0:4}/$pkgname-$pkgve
 sha256sums=('69c4aaf4f518f0f780469cf60e5e20bb766e3eb6ce068c78dc06a260377f79ab')
 
 build() {
-  cd "$pkgname-$pkgver"
-  ./config --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
+  cd gnome-software
+  ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
     --disable-static --disable-schemas-compile
   make
 }
 
 package() {
-  cd $pkgname-$pkgver
+  cd "$pkgname-$pkgver"
   make DESTDIR="${pkgdir}" install
 
   # Remove fedora-only plugins
