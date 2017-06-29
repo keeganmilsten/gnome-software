@@ -101,6 +101,27 @@
             <property name="position">1</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkButton" id="button">
+            <property name="label" translatable="yes">_Go to: https://www.ostechnix.com/downgrade-package-arch-linux/</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="margin_top">23</property>
+            <property name="margin_bottom">26</property>
+            <property name="use_underline">True</property>
+            <style>
+              <class name="suggested-action"/>
+            </style>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
     </child>
   </template>
