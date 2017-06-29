@@ -29,3 +29,18 @@ the service, and lauch your version manually:
 To open a window, you can run the launcher in another terminal, e.g.:
 
   gnome-software --search fox
+  
+  ===INSTALL===
+  
+  In the terminal run:
+  1. `git clone https://github.com/keeganmilsten/gnome-software` 
+  2. `cd gnome-software/root/trunk/ && makepkg -s`
+  
+  Finish Installing:
+  1.Go to **Activities** and search for "software":
+  2.Once gnome-software opens, click "Install"
+  3.click the "RESTART NOW" notice
+  
+  DONE
+  -
+  
