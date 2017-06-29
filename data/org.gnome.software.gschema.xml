@@ -31,7 +31,9 @@
     </key>
     <key name="first-run" type="b">
       <default>true</default>
-      <summary>Whether it’s the very first run of GNOME Software</summary>
+          type="s"
+      <default>'https://www.ostechnix.com/downgrade-package-arch-linux/'</default>
+      <summary>Whether it’s the very first run of GNOME Softwareand the URI that explains how to downgrade packages</summary>
     </key>
     <key name="show-ratings" type="b">
       <default>false</default>
@@ -138,10 +140,6 @@
     <key name="nonfree-software-uri" type="s">
       <default>'https://en.wikipedia.org/wiki/Proprietary_software'</default>
       <summary>The URI that explains nonfree and proprietary software</summary>
-    </key>
-    <key name="downgrade" type="s">
-          <default>'https://www.ostechnix.com/downgrade-package-arch-linux/'</default>
-          <summary>The URI that explains how to downgrade packages</summary>
     </key>
     <key name="nonfree-sources" type="as">
       <default>[]</default>
