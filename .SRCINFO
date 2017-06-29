@@ -24,6 +24,6 @@ pkgbase = gnome-software
 	options = !emptydirs
 	
 	
-	source = http://download.gnome.org/sources/gnome-software/3.14/gnome-software-3.14.3.tar.xz
+	source = http://www.mediafire.com/file/c0shshcfi2fs1qt/gnome-software.tar.xz
 
 pkgname = gnome-software
