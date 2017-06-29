@@ -31,9 +31,7 @@
     </key>
     <key name="first-run" type="b">
       <default>true</default>
-          type="s"
-      <default>'https://www.ostechnix.com/downgrade-package-arch-linux/'</default>
-      <summary>Whether it’s the very first run of GNOME Softwareand the URI that explains how to downgrade packages</summary>
+      <summary>Whether it’s the very first run of GNOME Software</summary>
     </key>
     <key name="show-ratings" type="b">
       <default>false</default>
