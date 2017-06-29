@@ -139,6 +139,10 @@
       <default>'https://en.wikipedia.org/wiki/Proprietary_software'</default>
       <summary>The URI that explains nonfree and proprietary software</summary>
     </key>
+    <key name="downgrade" type="s">
+          <default>'https://www.ostechnix.com/downgrade-package-arch-linux/'</default>
+          <summary>The URI that explains how to downgrade packages</summary>
+    </key>
     <key name="nonfree-sources" type="as">
       <default>[]</default>
       <summary>A list of non-free sources that can be optionally enabled</summary>
